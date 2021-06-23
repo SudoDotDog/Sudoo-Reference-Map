@@ -22,4 +22,94 @@ export class ReferenceMap<K extends ReferenceMapKey = string, T extends any = an
 
         this._itemMap = new Map<K, T>();
     }
+
+    public fulfillItemWith(fulfiller: NamedReferenceItemFulfiller<K, T>): this {
+
+        this._itemFulfillers.push(fulfiller);
+        return this;
+    }
+
+    public ensureItemOrDefault(key: K, defaultItem: T): T {
+
+        if (!this._itemMap.has(key)) {
+            return defaultItem;
+        }
+        return this._itemMap.get(key) as T;
+    }
+
+    public ensureItemOrUndefined(key: K): T | undefined {
+
+        if (!this._itemMap.has(key)) {
+            return undefined;
+        }
+        return this._itemMap.get(key) as T;
+    }
+
+    public ensureItemOrNull(key: K): T | null {
+
+        if (!this._itemMap.has(key)) {
+            return null;
+        }
+        return this._itemMap.get(key) as T;
+    }
+
+    public reset(key: K): this {
+
+        this._itemMap.delete(key);
+        return this;
+    }
+
+    public async getItemOrDefault(key: K, defaultItem: T): Promise<T> {
+
+        await this.fulfillItem(key);
+        if (!this._itemMap.has(key)) {
+            return defaultItem;
+        }
+        return this._itemMap.get(key) as T;
+    }
+
+    public async getItemOrUndefined(key: K): Promise<T | undefined> {
+
+        await this.fulfillItem(key);
+        if (!this._itemMap.has(key)) {
+            return undefined;
+        }
+        return this._itemMap.get(key) as T;
+    }
+
+    public async getItemOrNull(key: K): Promise<T | null> {
+
+        await this.fulfillItem(key);
+        if (!this._itemMap.has(key)) {
+            return null;
+        }
+        return this._itemMap.get(key) as T;
+    }
+
+    public async refreshItem(key: K): Promise<void> {
+
+        this.reset(key);
+        await this.fulfillItem(key);
+        return;
+    }
+
+    public async fulfillItem(key: K): Promise<void> {
+
+        if (this._itemMap.has(key)) {
+            return;
+        }
+
+        fulfillers: for (const fulfiller of this._itemFulfillers) {
+
+            const shouldUse: boolean = await fulfiller.shouldFulfillWith(key);
+
+            if (shouldUse) {
+
+                const value: T = await fulfiller.execute(key);
+                this._itemMap.set(key, value);
+                break fulfillers;
+            }
+        }
+        return;
+    }
 }
