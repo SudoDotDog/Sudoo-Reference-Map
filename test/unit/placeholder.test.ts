@@ -14,6 +14,6 @@ describe('Placeholder', (): void => {
 
     it('Placeholder', (): void => {
 
-        expect(chance.string()).to.be.not.equal(change.string());
+        expect(chance.string()).to.be.not.equal(chance.string());
     });
 });

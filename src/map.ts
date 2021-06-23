@@ -5,6 +5,7 @@
  */
 
 import { ReferenceMapKey } from "./declare";
+import { MultipleReferenceFulfiller, MultipleReferenceFulfillerResultElement } from "./fulfiller/multiple";
 import { NamedReferenceFulfiller } from "./fulfiller/named";
 
 export class ReferenceMap<K extends ReferenceMapKey = string, T extends any = any> {
@@ -21,6 +22,8 @@ export class ReferenceMap<K extends ReferenceMapKey = string, T extends any = an
     private constructor() {
 
         this._itemMap = new Map<K, T>();
+
+        this._namedFulfillers = [];
     }
 
     public fulfillItemWith(fulfiller: NamedReferenceFulfiller<K, T>): this {
@@ -93,23 +96,41 @@ export class ReferenceMap<K extends ReferenceMapKey = string, T extends any = an
         return;
     }
 
-    public async fulfillItem(key: K): Promise<void> {
+    public async batchWith(fulfiller: MultipleReferenceFulfiller<K, T>): Promise<boolean> {
+
+        const shouldUse: boolean = await fulfiller.shouldFulfillWith();
+
+        if (!shouldUse) {
+            return false;
+        }
+
+        const result: Array<MultipleReferenceFulfillerResultElement<K, T>> = await fulfiller.execute();
+
+        for (const each of result) {
+            this._itemMap.set(each.key, each.value);
+        }
+
+        return true;
+    }
+
+    public async fulfillItem(key: K): Promise<boolean> {
 
         if (this._itemMap.has(key)) {
-            return;
+            return false;
         }
 
         fulfillers: for (const fulfiller of this._namedFulfillers) {
 
             const shouldUse: boolean = await fulfiller.shouldFulfillWith(key);
 
-            if (shouldUse) {
-
-                const value: T = await fulfiller.execute(key);
-                this._itemMap.set(key, value);
-                break fulfillers;
+            if (!shouldUse) {
+                return false;
             }
+
+            const value: T = await fulfiller.execute(key);
+            this._itemMap.set(key, value);
+            break fulfillers;
         }
-        return;
+        return true;
     }
 }

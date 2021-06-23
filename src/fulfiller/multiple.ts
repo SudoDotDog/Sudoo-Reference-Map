@@ -52,13 +52,13 @@ export class MultipleReferenceFulfiller<K extends ReferenceMapKey = string, T ex
     public async execute(): Promise<Array<MultipleReferenceFulfillerResultElement<K, T>>> {
 
         const result: T[] = await Promise.resolve(this._fulfiller());
-        const mappedResult: MultipleReferenceFulfillerResultElement<K, T>[] = result.map((each: T) => {
+        const mappedResult: Array<MultipleReferenceFulfillerResultElement<K, T>> = result.map((each: T) => {
 
             return {
                 key: this._keyExtractor(each),
                 value: each,
             };
-        })
+        });
         return mappedResult;
     }
 }
