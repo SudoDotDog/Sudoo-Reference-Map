@@ -1,6 +1,6 @@
 {
   "name": "@sudoo/reference-map",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Reference Map for JS",
   "directories": {
     "doc": "docs"

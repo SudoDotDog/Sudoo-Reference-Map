@@ -89,11 +89,10 @@ export class ReferenceMap<K extends ReferenceMapKey = string, T extends any = an
         return this._itemMap.get(key) as T;
     }
 
-    public async refreshItem(key: K): Promise<void> {
+    public async refreshItem(key: K): Promise<boolean> {
 
         this.reset(key);
-        await this.fulfillItem(key);
-        return;
+        return await this.fulfillItem(key);
     }
 
     public async batchWith(fulfiller: MultipleReferenceFulfiller<K, T>): Promise<boolean> {
@@ -119,18 +118,17 @@ export class ReferenceMap<K extends ReferenceMapKey = string, T extends any = an
             return false;
         }
 
-        fulfillers: for (const fulfiller of this._namedFulfillers) {
+        for (const fulfiller of this._namedFulfillers) {
 
             const shouldUse: boolean = await fulfiller.shouldFulfillWith(key);
 
-            if (!shouldUse) {
-                return false;
-            }
+            if (shouldUse) {
 
-            const value: T = await fulfiller.execute(key);
-            this._itemMap.set(key, value);
-            break fulfillers;
+                const value: T = await fulfiller.execute(key);
+                this._itemMap.set(key, value);
+                return true;
+            }
         }
-        return true;
+        return false;
     }
 }
