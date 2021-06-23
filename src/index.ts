@@ -5,5 +5,6 @@
  */
 
 export * from "./declare";
+export * from "./item-fulfiller";
 export * from "./map";
 
