@@ -5,7 +5,7 @@
  */
 
 import { ReferenceMapKey } from "./declare";
-import { NamedReferenceItemFulfiller } from "./item-fulfiller";
+import { NamedReferenceFulfiller } from "./fulfiller/named";
 
 export class ReferenceMap<K extends ReferenceMapKey = string, T extends any = any> {
 
@@ -16,16 +16,16 @@ export class ReferenceMap<K extends ReferenceMapKey = string, T extends any = an
 
     private _itemMap: Map<K, T>;
 
-    private readonly _itemFulfillers: Array<NamedReferenceItemFulfiller<K, T>>;
+    private readonly _namedFulfillers: Array<NamedReferenceFulfiller<K, T>>;
 
     private constructor() {
 
         this._itemMap = new Map<K, T>();
     }
 
-    public fulfillItemWith(fulfiller: NamedReferenceItemFulfiller<K, T>): this {
+    public fulfillItemWith(fulfiller: NamedReferenceFulfiller<K, T>): this {
 
-        this._itemFulfillers.push(fulfiller);
+        this._namedFulfillers.push(fulfiller);
         return this;
     }
 
@@ -99,7 +99,7 @@ export class ReferenceMap<K extends ReferenceMapKey = string, T extends any = an
             return;
         }
 
-        fulfillers: for (const fulfiller of this._itemFulfillers) {
+        fulfillers: for (const fulfiller of this._namedFulfillers) {
 
             const shouldUse: boolean = await fulfiller.shouldFulfillWith(key);
 
